@@ -10,4 +10,6 @@ wheels/
 .venv
 
 .env
-db/
+
+# SQLite data files (keep the db/ package, ignore the database itself)
+*.db*
