@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+FRONTEND_DIR="$ROOT_DIR/frontend"
+UI_DIR="$FRONTEND_DIR/ui_do_recife"
+
+# ── Load .env ─────────────────────────────────────────────────────────────────
+# bin/start only runs the Flask UI + ngrok (the flow runs on AMP), so we load the
+# frontend env file here. The UI's app.py also loads ui_do_recife/.env via
+# load_dotenv, so keep both pointed at the same file.
+if [[ -f "$UI_DIR/.env" ]]; then
+  set -a
+  source "$UI_DIR/.env"
+  set +a
+fi
+
+NGROK_DOMAIN="${NGROK_DOMAIN:-do-recife.ngrok.app}"
+PORT="${PORT:-5005}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --ngrok-domain) NGROK_DOMAIN="$2"; shift 2 ;;
+    --port)         PORT="$2"; shift 2 ;;
+    *)              echo "Unknown flag: $1"; exit 1 ;;
+  esac
+done
+
+FLASK_PID=""
+NGROK_PID=""
+
+cleanup() {
+  echo ""
+  echo "Shutting down..."
+  [[ -n "$FLASK_PID" ]] && kill "$FLASK_PID" 2>/dev/null || true
+  [[ -n "$NGROK_PID" ]] && kill "$NGROK_PID" 2>/dev/null || true
+  wait 2>/dev/null || true
+  echo "Done."
+}
+trap cleanup EXIT INT TERM
+
+# ── Ignore any inherited virtualenv ──────────────────────────────────────────
+# The caller may already have a venv active (e.g. the crew workspace .venv). That
+# makes uv warn that VIRTUAL_ENV doesn't match frontend/.venv. Clear it so this
+# script manages the frontend environment unambiguously.
+unset VIRTUAL_ENV VIRTUAL_ENV_PROMPT
+
+# ── Dependencies via uv ──────────────────────────────────────────────────────
+# The UI is a standalone Flask app (it talks to the AMP deployment over HTTP),
+# so we sync only the frontend project into its own .venv — not the crew packages.
+echo "Installing dependencies..."
+uv sync --project "$FRONTEND_DIR"
+
+# ── Switch to the frontend virtualenv ────────────────────────────────────────
+# uv sync provisioned frontend/.venv (isolated from the crew workspace venv);
+# activate it so Flask runs with exactly those deps and the right interpreter.
+# shellcheck disable=SC1091
+source "$FRONTEND_DIR/.venv/bin/activate"
+
+# ── Start Flask ──────────────────────────────────────────────────────────────
+echo "Starting Flask on port $PORT (venv: $VIRTUAL_ENV)..."
+PORT="$PORT" python "$UI_DIR/app.py" 2>&1 &
+FLASK_PID=$!
+sleep 2
+
+if ! kill -0 "$FLASK_PID" 2>/dev/null; then
+  echo "ERROR: Flask failed to start."
+  exit 1
+fi
+
+# ── Start ngrok ──────────────────────────────────────────────────────────────
+echo "Starting ngrok tunnel → https://$NGROK_DOMAIN ..."
+ngrok http "$PORT" --url "$NGROK_DOMAIN" --log stdout --log-level warn > /dev/null 2>&1 &
+NGROK_PID=$!
+sleep 2
+
+echo ""
+echo "════════════════════════════════════════════════════════════"
+echo "  Local:  http://localhost:$PORT"
+echo "  Public: https://$NGROK_DOMAIN"
+echo ""
+echo "  Webhook endpoint: https://$NGROK_DOMAIN/api/webhook/<channel_id>"
+echo "════════════════════════════════════════════════════════════"
+echo ""
+echo "Press Ctrl+C to stop."
+
+wait

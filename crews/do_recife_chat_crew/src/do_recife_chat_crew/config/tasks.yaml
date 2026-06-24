@@ -1,0 +1,34 @@
+retrieval_task:
+  description: >
+    Use the MongoDB vector search tool to retrieve the passages from the Diário
+    Oficial do Recife that are most relevant to answering this question:
+    {question}
+
+    Do NOT run a single search. Issue MULTIPLE search queries (at least 3-4)
+    using different variations of the question: rephrase it, swap in synonyms,
+    isolate key terms, and try specific names, dates, numbers, and document
+    types (decreto, portaria, edital, lei, etc.). Run additional follow-up
+    searches if the first results look incomplete. Then consolidate the results
+    across all your queries, keeping the most relevant and complementary
+    excerpts and removing duplicates. Do not rely on prior knowledge: only
+    consider what the tool returns.
+  expected_output: >
+    A consolidated list of the most relevant retrieved excerpts gathered across
+    your multiple query variations. For each excerpt, include the verbatim text
+    and its source metadata when available (DO issue number, year, edition date,
+    page, and file name). If nothing relevant is found after several varied
+    queries, say so explicitly.
+  agent: do_researcher
+
+answer_task:
+  description: >
+    Answer the question {question} using ONLY the passages retrieved in the
+    previous step. Cite the source of each claim (issue number, edition date,
+    and page). If the retrieved context does not contain the answer, state
+    clearly that the information was not found in the Diário Oficial do Recife.
+    Respond in the same language used to ask the question.
+  expected_output: >
+    A clear, well-structured answer to {question}, grounded strictly in the
+    retrieved passages and citing the relevant DO issue/date/page. Written in the
+    same language as the question and formatted as markdown without '```'.
+  agent: do_reporter

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diário Oficial do Recife - Busca via Chat</title>
+  <link rel="icon" type="image/png" href="/static/img/logo.png">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/static/img/logo.png" alt="Prefeitura do Recife" class="brand-logo">
+        <span class="brand-subtitle">Diário Oficial · Busca via Chat</span>
+      </div>
+
+      <div class="channel-section">
+        <div class="channel-section-header">
+          <span>CONVERSAS</span>
+          <button id="btn-new-channel" class="btn-icon" title="Nova conversa">+</button>
+        </div>
+        <ul id="channel-list" class="channel-list"></ul>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Empty state (no channel selected) -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-state-icon">
+          <img src="/static/img/logo.png" alt="Prefeitura do Recife" style="width:240px;max-width:70%;height:auto;object-fit:contain">
+        </div>
+        <h2>Busca no Diário Oficial do Recife</h2>
+        <p>Selecione uma conversa ou crie uma nova para começar a pesquisar.</p>
+      </div>
+
+      <!-- Chat view (hidden by default) -->
+      <div id="chat-view" class="chat-view hidden">
+        <header class="chat-header">
+          <span class="hash">#</span>
+          <span id="chat-channel-name" class="chat-channel-name"></span>
+        </header>
+
+        <div id="messages" class="messages">
+          <div id="typing-indicator" class="typing-indicator hidden"></div>
+        </div>
+
+        <div class="input-toolbar">
+          <div id="execution-banner" class="execution-banner hidden">
+            <img src="/static/img/logo_mark.jpg" alt="" class="execution-banner-logo">
+            <span>Buscando no Diário Oficial…</span>
+          </div>
+        </div>
+        <form id="message-form" class="message-form">
+          <input
+            type="text"
+            id="message-input"
+            class="message-input"
+            placeholder="Mensagem…"
+            autocomplete="off"
+          >
+          <button type="submit" class="btn-send" title="Enviar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- New channel modal -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Nova conversa</h3>
+      <form id="new-channel-form">
+        <input
+          type="text"
+          id="new-channel-name"
+          class="modal-input"
+          placeholder="ex.: saúde da mulher"
+          autocomplete="off"
+          maxlength="40"
+          required
+        >
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel-modal" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Criar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tool execution detail modal -->
+  <div id="tool-modal-overlay" class="modal-overlay hidden">
+    <div class="modal tool-modal">
+      <div class="tool-modal-header">
+        <h3 id="tool-modal-title">Execução da ferramenta</h3>
+        <button type="button" id="btn-close-tool-modal" class="btn-close" aria-label="Fechar">×</button>
+      </div>
+      <div id="tool-modal-body" class="tool-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Wakeup spinner overlay -->
+  <div id="wakeup-overlay" class="wakeup-overlay hidden">
+    <div class="wakeup-spinner">
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-logo">
+        <img src="/static/img/logo_mark.jpg" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
+      </div>
+    </div>
+    <span class="wakeup-label">Conectando…</span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
