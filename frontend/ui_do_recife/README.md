@@ -82,20 +82,33 @@ Without a public tunnel, AMP cannot deliver webhook events, so streaming/respons
 
 The UI is self-contained in `frontend/` (its own `pyproject.toml` / `uv.lock`, excluded from the uv workspace — no CrewAI deps). The monorepo root is reserved for the crews/AMP, so **only the `frontend/` subtree is deployed** using the official `heroku/python` buildpack plus `git subtree` (no third-party buildpacks). The buildpack installs from `frontend/uv.lock` and `Procfile` serves the app with gunicorn — no ngrok needed in prod, the public dyno URL is the webhook target.
 
-Run all commands from the **monorepo root**:
+Run all commands from the **monorepo root**.
 
 ```bash
-# One-time
-heroku create <your-ui-app>                  # or: heroku git:remote -a <your-ui-app>
+# 1) One-time: point a `heroku` git remote at your app.
+#    If the app ALREADY exists in your account (the common case):
+heroku git:remote -a <your-ui-app>
+#    Only if you need to create a brand-new app (requires a verified
+#    Heroku account, i.e. payment info on file):
+# heroku create <your-ui-app>
+
+# 2) One-time: buildpack + config vars.
 heroku buildpacks:set heroku/python -a <your-ui-app>
 heroku config:set -a <your-ui-app> \
   DEPLOYMENT_URL=... DEPLOYMENT_KEY=... WEBHOOK_TOKEN=...
 
-# Deploy the frontend/ subdirectory (commit your changes first)
+# 3) Deploy the frontend/ subdirectory (commit your changes first).
 git subtree push --prefix frontend heroku main
 # If rejected (non-fast-forward), force-push the split:
 git push heroku "$(git subtree split --prefix frontend main)":refs/heads/main --force
 ```
+
+> The `heroku git:remote` step is the one that's easy to miss: without it,
+> `git subtree push ... heroku` fails with
+> `fatal: 'heroku' does not appear to be a git repository` because no `heroku`
+> remote exists yet (only `origin`). `heroku create` would add it
+> automatically, but if you skipped `create` (existing app) or it errored, run
+> `heroku git:remote -a <your-ui-app>` to attach it.
 
 - **Keep `web` at a single dyno** (`heroku ps:scale web=1`). SSE subscribers, the status watchdog, and in-flight response state live in-process, so multiple workers/dynos break streaming. The `Procfile` already pins `--workers 1` and uses threaded workers for concurrent SSE connections.
 - `PORT` is injected by Heroku — don't set it; `NGROK_DOMAIN` is unused in prod.
