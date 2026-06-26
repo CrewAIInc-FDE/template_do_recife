@@ -439,6 +439,14 @@ def _handle_event(channel_id: str, ev: dict):
         )
 
     elif etype == "flow_finished":
+        # crewai >=1.15 emits a spurious inner `flow_finished` for the
+        # AgentExecutor sub-flow (flow_name="AgentExecutor", result="completed")
+        # with the same execution_id as the real kickoff, arriving BEFORE the
+        # top-level flow's finished event. If processed, it would finalize the
+        # response with "completed" and dedupe away the real answer. Ignore it.
+        # @TODO: remove this 'if' statement once the problem is patched
+        if d.get("flow_name") == "AgentExecutor":
+            return
         ar = _active_responses.get(channel_id)
         result = d.get("result") or {}
         final_text = _result_to_text(result)
