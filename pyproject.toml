@@ -4,8 +4,29 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13.12"
-dependencies = []
+dependencies = [
+    "do-recife-chat-flow",
+    "do-recife-chat-crew",
+    "do-recife-embedder",
+]
+
+[tool.uv.sources]
+do-recife-chat-flow = { workspace = true }
+do-recife-chat-crew = { workspace = true }
+do-recife-embedder = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/template_do_recife"]
 
 [tool.uv.workspace]
 members = ["crews/*"]
 exclude = ["frontend"]
+
+[project.scripts]
+kickoff_embedder = "do_recife_embedder.main:kickoff"
+kickoff_crew = "do_recife_chat_crew.main:run"
+kickoff_flow = "do_recife_chat_flow.main:kickoff"

@@ -45,26 +45,24 @@ Root `.env` (used by the crews):
 
 ## Running the crews
 
-Each crew is a workspace member. Invoke them by **module path** (`python -m`),
-which targets a specific crew unambiguously:
+Run from anywhere in the repo — `uv run` syncs the shared `.venv` first:
 
 ```bash
-# Embed PDFs placed in crews/do_recife_embedder/src/do_recife_embedder/data/
-uv run --package do_recife_embedder python -m do_recife_embedder.main
-
-# One-shot RAG answer from the crew
-uv run --package do_recife_chat_crew python -m do_recife_chat_crew.main
-
-# Run the conversational flow locally
-uv run --package do_recife_chat_flow python -m do_recife_chat_flow.main
+uv run kickoff_embedder   # embed PDFs
+uv run kickoff_crew        # one-shot RAG answer
+uv run kickoff_flow        # run the conversational flow locally
 ```
 
-> Note: avoid the bare console scripts (`kickoff`, `run_crew`, `plot`, ...) from
-> the repo root. All three crews define those same names, so in the shared
-> workspace venv they collide and resolve to a single crew. The `python -m`
-> form above is collision-proof; or run a crew from inside its own folder.
+To target a single crew explicitly (e.g. for its own `plot`/`replay`/`train`),
+add `--package`:
 
-VS Code debug configs for each crew live in `.vscode/launch.json`.
+```bash
+uv run --package do_recife_chat_flow kickoff
+```
+
+> Note: avoid the bare colliding scripts (`kickoff`, `run_crew`, `plot`) from
+> the repo root — all three crews define those same names. The named
+> `kickoff_embedder` / `kickoff_crew` / `kickoff_flow` above are the safe way.
 
 ## Frontend + AMP
 

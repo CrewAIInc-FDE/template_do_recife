@@ -5,7 +5,7 @@ description = "do_recife_embedder using crewAI"
 authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
 dependencies = [
-    "crewai[tools]==1.14.6",
+    "crewai[tools]==1.15.0",
     "semchunk>=4.0.0",
     "pymongo>=4.17",
     "pymupdf>=1.26.6",
